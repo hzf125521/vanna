@@ -68,6 +68,7 @@ class SimplePassword(AuthInterface):
       </form>
       <!-- End Form -->
     </div>
+    </div>
   </div>
         '''
 

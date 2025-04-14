@@ -11,8 +11,8 @@ from custom_chat_deepseek import CustomDeepSeekChat
 from vanna.chromadb import ChromaDB_VectorStore
 from vanna.flask import VannaFlaskApp
 from sample_auth import SimplePassword
-# import os
-# import secrets
+import os
+import secrets
 
 api_key = 'sk-af1c6606c7a64cf7b71d20d402eb7355'
 model_name = 'deepseek-chat'
@@ -27,23 +27,19 @@ class DeepSeekVanna(ChromaDB_VectorStore, CustomDeepSeekChat):
 
 vn = DeepSeekVanna(config={"api_key": api_key, "model": model_name, "language": language})
 
-# vn.connect_to_mssql(
-#     odbc_conn_str='DRIVER={ODBC Driver 17 for SQL Server};SERVER=10.97.14.25,1433;DATABASE=xsteamyj1218;UID=xstadmin;PWD=moonsdb5865')
-
 vn.connect_to_mssql(
-    odbc_conn_str='DRIVER={ODBC Driver 17 for SQL Server};SERVER=10.97.21.90,1433;DATABASE=xstsql;UID=xstadmin;PWD=moonsdb5865')
+    odbc_conn_str='DRIVER={ODBC Driver 17 for SQL Server};SERVER=10.97.14.25,1433;DATABASE=xsteamyj1218;UID=xstadmin;PWD=moonsdb5865')
 
 app = VannaFlaskApp(
     vn,
-    # auth=SimplePassword(users=[{"email": "admin@example.com", "password": "password"}]),
+    auth=SimplePassword(users=[{"email": "admin@example.com", "password": "password"}]),
     allow_llm_to_see_data=True,
-    # assets_folder="static",
-    logo="F:\company\project\vanna_2dev_src\_my_temp_test\static\my_logo.svg",
+    logo="",
     title="智能点检分析助手",
     subtitle=""
 )
 
-# # 设置Flask应用的密钥
-# app.flask_app.secret_key = secrets.token_hex(16)
+# 设置Flask应用的密钥
+app.flask_app.secret_key = secrets.token_hex(16)
 
 app.run()
