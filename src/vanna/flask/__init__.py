@@ -313,7 +313,7 @@ class VannaFlaskAPI:
                 in: query
                 type: string
                 required: true
-              - name: org_id
+              - name: user_id
                 in: query
                 type: string
                 required: false
@@ -331,18 +331,17 @@ class VannaFlaskAPI:
                       type: string
             """
             question = flask.request.args.get("question")
-            org_id = flask.request.args.get("org_id")
+            user_id = flask.request.args.get("user_id")
+            print(user_id)
 
             if question is None:
                 return jsonify({"type": "error", "error": "No question provided"})
 
             id = self.cache.generate_id(question=question)
             
-            kwargs = {"allow_llm_to_see_data": self.allow_llm_to_see_data}
-            if org_id is not None:
-                kwargs["org_id"] = org_id
-                
-            sql = vn.generate_sql(question=question, **kwargs)
+
+
+            sql = vn.generate_sql(question=question, allow_llm_to_see_data=self.allow_llm_to_see_data, user_id=user_id)
 
             self.cache.set(id=id, field="question", value=question)
             self.cache.set(id=id, field="sql", value=sql)

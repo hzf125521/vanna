@@ -65,7 +65,7 @@ class CustomDeepSeekChat(VannaBase):
         Args:
             question (str): The question to generate a SQL query for.
             allow_llm_to_see_data (bool): Whether to allow the LLM to see the data (for the purposes of introspecting the data to generate the final SQL).
-            **kwargs: Additional arguments, including org_id.
+            **kwargs: Additional arguments, including user_id.
 
         Returns:
             str: The SQL query that answers the question.
@@ -145,12 +145,16 @@ class CustomDeepSeekChat(VannaBase):
             question_sql_list (list): A list of questions and their corresponding SQL statements.
             ddl_list (list): A list of DDL statements.
             doc_list (list): A list of documentation.
-            **kwargs: Additional arguments, including org_id.
+            **kwargs: Additional arguments, including user_id.
 
         Returns:
             any: The prompt for the LLM to generate SQL.
         """
 
+        user_id = kwargs.get("user_id", None)
+        print(user_id)
+
+        # system
         if initial_prompt is None:
             initial_prompt = f"You are a {self.dialect} expert. " + \
             "Please help to generate a SQL query to answer the question. Your response should ONLY be based on the given context and follow the response guidelines and format instructions. "
@@ -169,6 +173,13 @@ class CustomDeepSeekChat(VannaBase):
             initial_prompt, doc_list, max_tokens=self.max_tokens
         )
 
+        ## Visible data in the table
+        initial_prompt += ("===Visible Data\n"
+        "使用提供的Table-Valued Function限制用户可访问的数据"
+        f"1. 使用fn_UserAccessibleAbpOrganizationUnits({user_id})表值函数代替AbpOrganizationUnits表的访问"
+        f"2. 使用fn_UserAccessibleDJLine({user_id})表值函数代替DJ_Line表的访问"
+        )
+
         initial_prompt += (
             "===Response Guidelines \n"
             "1. If the provided context is sufficient, please generate a valid SQL query without any explanations for the question. \n"
@@ -181,6 +192,7 @@ class CustomDeepSeekChat(VannaBase):
 
         message_log = [self.system_message(initial_prompt)]
 
+        # user-assistant：QA
         for example in question_sql_list:
             if example is None:
                 print("example is None")
@@ -189,6 +201,7 @@ class CustomDeepSeekChat(VannaBase):
                     message_log.append(self.user_message(example["question"]))
                     message_log.append(self.assistant_message(example["sql"]))
 
+        # user
         message_log.append(self.user_message(question))
 
         return message_log
