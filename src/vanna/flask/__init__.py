@@ -331,15 +331,13 @@ class VannaFlaskAPI:
                       type: string
             """
             question = flask.request.args.get("question")
-            user_id = flask.request.args.get("user_id")
+            user_id = flask.request.args.get("user_id", 10)
             print(user_id)
 
             if question is None:
                 return jsonify({"type": "error", "error": "No question provided"})
 
             id = self.cache.generate_id(question=question)
-            
-
 
             sql = vn.generate_sql(question=question, allow_llm_to_see_data=self.allow_llm_to_see_data, user_id=user_id)
 

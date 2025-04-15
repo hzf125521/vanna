@@ -178,7 +178,7 @@ class CustomDeepSeekChat(VannaBase):
             "===Visible Data\n"
             "使用提供的Table-Valued Function限制用户可访问的数据"
             f"1. 使用fn_UserAccessibleAbpOrganizationUnits({user_id})表值函数代替AbpOrganizationUnits表的访问"
-            f"2. 使用fn_UserAccessibleDJLine({user_id})表值函数代替DJ_Line表的访问"
+            f"2. 使用fn_UserAccessibleDJLines({user_id})表值函数代替DJ_Line表的访问"
         )
 
         initial_prompt += (

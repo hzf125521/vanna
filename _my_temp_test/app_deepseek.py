@@ -33,12 +33,20 @@ vn = DeepSeekVanna(config={"api_key": api_key, "model": model_name, "language": 
 vn.connect_to_mssql(
     odbc_conn_str='DRIVER={ODBC Driver 17 for SQL Server};SERVER=10.97.21.90,1433;DATABASE=xstsql;UID=xstadmin;PWD=moonsdb5865')
 
+
+import os
+# 设置静态文件路径
+static_folder = os.path.join(os.path.dirname(__file__), "static")
+index_html = os.path.join(static_folder, "index.html")
+
 app = VannaFlaskApp(
-    vn,
+    # index_html_path=index_html,
+    # assets_folder=os.path.join(static_folder, "assets"),
+    vn=vn,
     # auth=SimplePassword(users=[{"email": "admin@example.com", "password": "password"}]),
     allow_llm_to_see_data=True,
     # assets_folder="static",
-    logo="F:\company\project\vanna_2dev_src\_my_temp_test\static\my_logo.svg",
+    logo="./static/my_logo.svg",
     title="智能点检分析助手",
     subtitle=""
 )
