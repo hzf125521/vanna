@@ -1,0 +1,176 @@
+CREATE TABLE DJ_ResultYYYYMM (
+    Id BIGINT NOT NULL COMMENT '点检结果Id（主键）',
+    Line_ID BIGINT NULL DEFAULT NULL COMMENT '点检路线Id（外键），关联fn_UserAccessibleDJLines表的Id',
+    MobjectId BIGINT NULL DEFAULT NULL COMMENT '设备Id（外键），关联Mob_MObject表的Id',
+    MObjectStateName_TX NVARCHAR(256) NULL DEFAULT NULL COLLATE Chinese_PRC_CI_AS COMMENT '设备状态描述（如“运行”）',
+    DJSpec_ID BIGINT NOT NULL COMMENT '点检内容要求Id（外键），关联BZ_DJSpec表Id',
+    Partition_ID BIGINT NOT NULL COMMENT '区域Id',
+    Complete_TM DATETIME2(7) NOT NULL COMMENT '点检UTC时间',
+    ExLevel_ID BIGINT NOT NULL COMMENT '异常等级Id（大于0为异常）',
+    Result_TX NVARCHAR(1024) NULL DEFAULT NULL COLLATE Chinese_PRC_CI_AS COMMENT '点检结果描述',
+    Lastresult_TX NVARCHAR(1024) NULL DEFAULT NULL COLLATE Chinese_PRC_CI_AS COMMENT '上次点检结果描述',
+    AppUserName_TX NVARCHAR(1024) NULL DEFAULT NULL COLLATE Chinese_PRC_CI_AS COMMENT '检查人姓名',
+    ShiftName_TX NVARCHAR(256) NULL DEFAULT NULL COLLATE Chinese_PRC_CI_AS COMMENT '班次（如“白班”）',
+    ShiftGroupName_TX NVARCHAR(256) NULL DEFAULT NULL COLLATE Chinese_PRC_CI_AS COMMENT '值别（如“甲”）',
+    PRIMARY KEY (Id)
+) COMMENT='点检结果表，按月存储，通过后缀区分月份，例如DJ_Result202502';
+
+CREATE TABLE DJ_UncheckYYYYMM (
+    Id BIGINT NOT NULL COMMENT '任务Id（主键）',
+    Line_ID BIGINT NULL DEFAULT NULL COMMENT '点检路线Id（外键），关联fn_UserAccessibleDJLines表的Id',
+    MobjectId BIGINT NULL DEFAULT NULL COMMENT '设备Id（外键），关联Mob_MObject表的Id',
+    DJSpec_ID BIGINT NOT NULL COMMENT '点检内容要求Id（外键），关联BZ_DJSpec表的Id',
+    Query_DT DATETIME2(7) NOT NULL COMMENT '任务状态刷新时间',
+    Complete_CD NVARCHAR(4) NOT NULL COLLATE Chinese_PRC_CI_AS COMMENT '任务状态（WJ=未检，YJ=已检，BJ=不用检查，DJ=待检）',
+    ShiftName_TX NVARCHAR(100) NULL DEFAULT NULL COLLATE Chinese_PRC_CI_AS COMMENT '班次（如“白班”）',
+    ShiftGroupName_TX NVARCHAR(100) NULL DEFAULT NULL COLLATE Chinese_PRC_CI_AS COMMENT '班组（如“甲”）',
+    AppUserName_TX NVARCHAR(1024) NULL DEFAULT NULL COLLATE Chinese_PRC_CI_AS COMMENT '检查人',
+    PRIMARY KEY (Id)
+) COMMENT='点检任务计划表，各个设备的点检内容按照一定周期进行循环构成了所有点检任务计划。按月存储，通过后缀区分月份，例如DJ_Uncheck202502';
+
+CREATE TABLE BZ_DJSpec (
+    Id BIGINT NOT NULL COMMENT '点检内容要求Id（主键）',
+    Line_ID BIGINT NULL DEFAULT NULL COMMENT '点检路线Id（外键），关联fn_UserAccessibleDJLines表的Id',
+    Mobject_ID BIGINT NOT NULL COMMENT '设备Id（外键），关联Mob_MObject表的Id',
+    CheckPart_TX NVARCHAR(200) NULL DEFAULT NULL COLLATE Chinese_PRC_CI_AS COMMENT '设备上的检查部位（如“联轴器”、“泵体”等）',
+    CheckContent_TX NVARCHAR(200) NOT NULL COLLATE Chinese_PRC_CI_AS COMMENT '检查类型（如“温度”、“外观”等）',
+    CheckStandard_TX NVARCHAR(300) NOT NULL COLLATE Chinese_PRC_CI_AS COMMENT '判断标准（如“≦65℃”、“灯光、声音、是否正常，紧固、无脱落”等）',
+    DataType_ID BIGINT NOT NULL COMMENT '数据类型Id（外键），关联Z_DataType表的Id',
+    SignalType_ID BIGINT NOT NULL COMMENT '信号物理量Id（外键），关联Z_SignType表的Id',
+    Unit_ID BIGINT NULL DEFAULT NULL COMMENT '物理量单位Id（外键），关联Z_EngUnit表的Id',
+    YJUpper_NR DECIMAL(18,2) NULL DEFAULT NULL COMMENT '预警上限',
+    YJLower_NR DECIMAL(18,2) NULL DEFAULT NULL COMMENT '预警下限',
+    CreationTime DATETIME2(7) NOT NULL COMMENT '创建时间',
+    IsDeleted BIT NOT NULL COMMENT '是否删除（BIT类型）',
+    DeletionTime DATETIME2(7) NULL DEFAULT NULL COMMENT '删除时间',
+    PRIMARY KEY (Id)
+) COMMENT='点检内容要求表，记录了各个设备的检查部位、判断标准等';
+
+
+
+CREATE FUNCTION fn_UserAccessibleDJLines (@UserId BIGINT)
+RETURNS TABLE
+RETURN TABLE STRUCTURE AS (
+    Id BIGINT NOT NULL COMMENT '点检路线Id（主键）',
+    LineName_TX NVARCHAR(100) NOT NULL COLLATE Chinese_PRC_CI_AS COMMENT '点检路线名称',
+    Plant_Id BIGINT NOT NULL COMMENT '分厂Id（外键），关联fn_UserAccessibleDJLines表的Id',
+    Dept_Id BIGINT NOT NULL COMMENT '部门Id（外键），关联fn_UserAccessibleDJLines表的Id',
+    CreationTime DATETIME2(7) NOT NULL COMMENT '创建时间',
+    IsDeleted BIT NOT NULL COMMENT '是否删除',
+    DeletionTime DATETIME2(7) NULL DEFAULT NULL COMMENT '删除时间'
+) COMMENT='用户可访问的点检路线表，“UserId”为用户Id';
+
+
+
+
+
+CREATE FUNCTION fn_UserAccessibleAbpOrganizationUnits (@UserId BIGINT)
+RETURNS TABLE
+RETURN TABLE STRUCTURE AS (
+    Id BIGINT NOT NULL COMMENT '组织Id（主键）',
+    DisplayName NVARCHAR(128) NOT NULL COLLATE Chinese_PRC_CI_AS COMMENT '各级组织名称（如“厂”、“车间”）',
+    OrgType_Id INT NULL DEFAULT NULL COMMENT '组织类型（“0”表示公司，“1”表示分厂，“2”表示部门）',
+    OrgLevel INT NULL DEFAULT NULL COMMENT '组织等级',
+    ParentId BIGINT NULL DEFAULT NULL COMMENT '直接上级组织Id',
+    ParentId1 BIGINT NULL DEFAULT NULL COMMENT '所属1级组织Id',
+    ParentId2 BIGINT NULL DEFAULT NULL COMMENT '所属2级组织Id',
+    ParentId3 BIGINT NULL DEFAULT NULL COMMENT '所属3级组织Id',
+    ParentId4 BIGINT NULL DEFAULT NULL COMMENT '所属4级组织Id',
+    ParentId5 BIGINT NULL DEFAULT NULL COMMENT '所属5级组织Id',
+    ParentId6 BIGINT NULL DEFAULT NULL COMMENT '所属6级组织Id',
+    ParentId7 BIGINT NULL DEFAULT NULL COMMENT '所属7级组织Id',
+    CreationTime DATETIME2(7) NOT NULL COMMENT '创建时间',
+    IsDeleted BIT NOT NULL COMMENT '是否删除（BIT类型）',
+    DeletionTime DATETIME2(7) NULL DEFAULT NULL COMMENT '删除时间'
+) COMMENT='用户可访问的组织结构表，“UserId”为用户Id';
+
+
+
+
+CREATE TABLE Mob_MObject (
+    Id BIGINT NOT NULL COMMENT '设备Id（主键）',
+    MObjectName_TX NVARCHAR(512) NULL DEFAULT NULL COLLATE Chinese_PRC_CI_AS COMMENT '设备名称',
+    MObject_CD NVARCHAR(100) NOT NULL COLLATE Chinese_PRC_CI_AS COMMENT '设备编码',
+    AssetId BIGINT NOT NULL COMMENT '资产Id',
+    Level BIGINT NULL DEFAULT NULL COMMENT '设备等级',
+    ParentId BIGINT NULL DEFAULT NULL COMMENT '父设备Id',
+    Plant_Id BIGINT NOT NULL COMMENT '分厂Id（外键），关联fn_UserAccessibleDJLines表的Id',
+    CreationTime DATETIME2(7) NOT NULL COMMENT '创建时间',
+    IsDeleted BIT NOT NULL COMMENT '是否删除（BIT类型）',
+    DeletionTime DATETIME2(7) NULL DEFAULT NULL COMMENT '删除时间',
+    PRIMARY KEY (Id),
+    CONSTRAINT FK_Mob_MObject_Mob_MObject_ParentId 
+        FOREIGN KEY (ParentId) 
+        REFERENCES Mob_MObject (Id) 
+        ON UPDATE NO ACTION 
+        ON DELETE NO ACTION
+) COMMENT='设备信息表';
+
+CREATE TABLE Z_DataType (
+    Id BIGINT NOT NULL COMMENT '数据类型Id（主键）',
+    Name_TX NVARCHAR(20) NULL DEFAULT NULL COLLATE Chinese_PRC_CI_AS COMMENT '数据类型（如“观察量”、“仪抄量”、“手抄量”、“时间波形”、“频率”）',
+    PRIMARY KEY (Id)
+) COMMENT='数据类型表';
+
+CREATE TABLE Z_EngUnit (
+    Id BIGINT NOT NULL COMMENT '物理量单位Id（主键）',
+    Name_TX NVARCHAR(20) NULL DEFAULT NULL COLLATE Chinese_PRC_CI_AS COMMENT '物理量单位名称',
+    PRIMARY KEY (Id)
+) COMMENT='物理量单位表';
+
+CREATE TABLE Z_SignType (
+    Id BIGINT NOT NULL COMMENT '信号物理量Id（主键）',
+    Name_TX NVARCHAR(20) NULL DEFAULT NULL COLLATE Chinese_PRC_CI_AS COMMENT '物理量名称（如“速度”、“电压”）',
+    PRIMARY KEY (Id)
+) COMMENT='信号物理量表';
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+CREATE TABLE AbpUsers (
+    Id BIGINT NOT NULL COMMENT '用户Id',
+    IsDeleted BIT NOT NULL COMMENT '是否删除（BIT类型）',
+    PRIMARY KEY (Id)
+) COMMENT='用户表';
+
+CREATE TABLE AbpUserOrganizationUnits (
+    Id BIGINT NOT NULL,
+    UserId BIGINT NOT NULL COMMENT '用户Id',
+    OrganizationUnitId BIGINT NOT NULL COMMENT '组织Id，关联AbpOrganizationUnits表的Id',
+    IsDeleted BIT NOT NULL COMMENT '是否删除',
+    PRIMARY KEY (Id)
+) COMMENT='用户-组织对照表';
+
+CREATE TABLE DJ_AppUser (
+    Line_Id BIGINT NOT NULL COMMENT '点检路线Id，关联DJ_Line表的Id',
+    UserId BIGINT NOT NULL COMMENT '用户Id',
+    PRIMARY KEY (Line_Id, UserId)
+) COMMENT='用户-点检路线对照表';

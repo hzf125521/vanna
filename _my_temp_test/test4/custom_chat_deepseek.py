@@ -173,13 +173,13 @@ class CustomDeepSeekChat(VannaBase):
             initial_prompt, doc_list, max_tokens=self.max_tokens
         )
 
-        ## Visible data in the table
-        initial_prompt += (
-            "===Visible Data\n"
-            "使用提供的Table-Valued Function限制用户可访问的数据"
-            f"1. 使用fn_UserAccessibleAbpOrganizationUnits({user_id})表值函数代替AbpOrganizationUnits表的访问"
-            f"2. 使用fn_UserAccessibleDJLines({user_id})表值函数代替DJ_Line表的访问"
-        )
+        # ## Visible data in the table
+        # initial_prompt += (
+        #     "===Visible Data\n"
+        #     "使用提供的Table-Valued Function限制用户可访问的数据"
+        #     f"1. 使用fn_UserAccessibleAbpOrganizationUnits({user_id})表值函数代替AbpOrganizationUnits表的访问"
+        #     f"2. 使用fn_UserAccessibleDJLines({user_id})表值函数代替DJ_Line表的访问"
+        # )
 
         initial_prompt += (
             "===Response Guidelines \n"
@@ -193,6 +193,7 @@ class CustomDeepSeekChat(VannaBase):
 
         message_log = [self.system_message(initial_prompt)]
 
+
         # user-assistant：QA
         for example in question_sql_list:
             if example is None:
@@ -201,6 +202,21 @@ class CustomDeepSeekChat(VannaBase):
                 if example is not None and "question" in example and "sql" in example:
                     message_log.append(self.user_message(example["question"]))
                     message_log.append(self.assistant_message(example["sql"]))
+
+
+        visible_data = (
+            f"Restricting user (ID: {user_id}) data access using Table-Valued Functions:\n"
+            f"1. Replace direct access to the 'AbpOrganizationUnits' table with the function 'fn_UserAccessibleAbpOrganizationUnits({user_id})';\n"
+            f"2. Replace direct access to the 'DJ_Line' table with the function 'fn_UserAccessibleDJLines({user_id})'."
+        )
+        message_log.append(self.user_message(visible_data))
+
+        assistant_response = (
+            "Got it. I’ll strictly apply the table-valued functions to enforce access control when querying 'AbpOrganizationUnits' and 'DJ_Line'."
+        )
+        message_log.append(self.assistant_message(assistant_response))
+
+
 
         # user
         message_log.append(self.user_message(question))

@@ -1,0 +1,78 @@
+{"user_query":"过去30天内，“A”设备每日点检任务完成情况。",
+"assistant_answer":"SELECT 
+    m.Id AS 设备ID,                             
+    m.MobjectName_TX AS 设备名称, 
+    -- 分组单位：天
+    FORMAT(u.Query_DT, 'yyyy-MM-dd') AS 日期,  
+    COUNT(*) AS 任务总数, 
+    SUM(CASE u.Complete_CD WHEN 'YJ' THEN 1 ELSE 0 END) AS 已检数, 
+    SUM(CASE u.Complete_CD WHEN 'DJ' THEN 1 ELSE 0 END) AS 待检数, 
+    SUM(CASE u.Complete_CD WHEN 'BJ' THEN 1 ELSE 0 END) AS 不用检数, 
+    SUM(CASE u.Complete_CD WHEN 'WJ' THEN 1 ELSE 0 END) AS 未检数, 
+    CASE 
+        WHEN COUNT(*) > 0 THEN 
+            ROUND(CAST(SUM(CASE u.Complete_CD WHEN 'WJ' THEN 1 ELSE 0 END) AS FLOAT) / COUNT(*) * 100, 2)  
+        ELSE 
+            0 
+    END AS 未检率
+FROM (
+    -- 最近30天的任务数据
+    SELECT MobjectId, Complete_CD, Query_DT FROM DJ_Uncheck202503 -- 本月
+    UNION ALL
+    SELECT MobjectId, Complete_CD, Query_DT FROM DJ_Uncheck -- 本月补充任务表
+    UNION ALL
+    SELECT MobjectId, Complete_CD, Query_DT FROM DJ_Uncheck202502 -- 上月
+) u
+INNER JOIN Mob_MObject m ON m.id = u.MobjectId
+WHERE 
+    -- 设备名称筛选
+    m.MObjectName_TX LIKE '%A%' 
+    -- 最近30天时间范围
+    AND u.Query_DT >= DATEADD(DAY, -30, GETDATE()) 
+    AND u.Query_DT < GETDATE()
+GROUP BY 
+    m.Id,                
+    m.MobjectName_TX,
+    -- 分组单位：天
+    FORMAT(u.Query_DT, 'yyyy-MM-dd')
+ORDER BY 
+    日期 DESC;"
+}
+
+
+{
+    "user_query":"“纸浆厂”分厂下有哪些点检线路和设备？"，
+    "assistant_answer":"SELECT
+    Org.Id AS 分厂Id,
+    Org.DisplayName AS 分厂名称,
+    Dept.Id AS 装置Id,
+    Dept.DisplayName AS 装置名称,
+    L.Id AS 路线Id,
+    L.LineName_TX AS 路线名称,
+    M.Id AS 设备Id,
+    M.MObjectName_TX AS 设备名称
+FROM BZ_DJSpec DJ
+INNER JOIN DJ_Line L ON DJ.Line_ID = L.Id
+INNER JOIN fn_UserAccessibleAbpOrganizationUnits(@UserId) Dept ON L.Dept_Id = Dept.Id
+INNER JOIN fn_UserAccessibleAbpOrganizationUnits(@UserId) Org ON Dept.ParentId = Org.Id
+INNER JOIN Mob_MObject M ON DJ.Mobject_ID = M.Id
+WHERE 
+    DJ.IsDeleted = 0
+    AND Org.DisplayName = '纸浆厂'
+GROUP BY
+    Org.Id,
+    Org.DisplayName,
+    Dept.Id,
+    Dept.DisplayName,
+    L.Id,
+    L.LineName_TX,
+    M.Id,
+    M.MObjectName_TX
+ORDER BY
+    Org.Id,
+    Dept.Id,
+    L.Id,
+    M.Id;"
+}
+
+
