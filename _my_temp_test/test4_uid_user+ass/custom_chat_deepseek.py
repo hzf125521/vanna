@@ -151,7 +151,7 @@ class CustomDeepSeekChat(VannaBase):
             any: The prompt for the LLM to generate SQL.
         """
 
-        user_id = kwargs.get("user_id", None)
+        user_id = kwargs.get("user_id")
         print(user_id)
 
         # system

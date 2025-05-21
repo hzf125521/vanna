@@ -1,3 +1,23 @@
+## type
+
+        visible_data = (
+            f"Restricting user (ID: {user_id}) data access using Table-Valued Functions:\n"
+            f"1. Replace direct access to the 'AbpOrganizationUnits' table with the function 'fn_UserAccessibleAbpOrganizationUnits({user_id})';\n"
+            f"2. Replace direct access to the 'DJ_Line' table with the function 'fn_UserAccessibleDJLines({user_id})'."
+        )
+        message_log.append(self.user_message(visible_data))
+
+        assistant_response = (
+            "Got it. I’ll strictly apply the table-valued functions to enforce access control when querying 'AbpOrganizationUnits' and 'DJ_Line'."
+        )
+        message_log.append(self.assistant_message(assistant_response))
+
+
+
+
+
+## base tabel
+
 CREATE TABLE DJ_ResultYYYYMM (
     Id BIGINT NOT NULL COMMENT '点检结果Id（主键）',
     Line_ID BIGINT NULL DEFAULT NULL COMMENT '点检路线Id（外键），关联DJ_Line表的Id',
@@ -122,6 +142,9 @@ CREATE TABLE Z_SignType (
 
 
 
+
+
+## UserId
 
 CREATE TABLE AbpUsers (
     Id BIGINT NOT NULL COMMENT '用户Id',

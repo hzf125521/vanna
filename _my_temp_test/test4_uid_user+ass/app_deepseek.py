@@ -27,11 +27,11 @@ class DeepSeekVanna(ChromaDB_VectorStore, CustomDeepSeekChat):
 
 vn = DeepSeekVanna(config={"api_key": api_key, "model": model_name, "language": language})
 
-# vn.connect_to_mssql(
-#     odbc_conn_str='DRIVER={ODBC Driver 17 for SQL Server};SERVER=10.97.14.25,1433;DATABASE=xsteamyj1218;UID=xstadmin;PWD=moonsdb5865')
-
 vn.connect_to_mssql(
-    odbc_conn_str='DRIVER={ODBC Driver 17 for SQL Server};SERVER=10.97.21.90,1433;DATABASE=xstsql;UID=xstadmin;PWD=moonsdb5865')
+    odbc_conn_str='DRIVER={ODBC Driver 17 for SQL Server};SERVER=10.97.14.25,1433;DATABASE=xsteamyj1218;UID=xstadmin;PWD=moonsdb5865')
+
+# vn.connect_to_mssql(
+#     odbc_conn_str='DRIVER={ODBC Driver 17 for SQL Server};SERVER=10.97.21.90,1433;DATABASE=xstsql;UID=xstadmin;PWD=moonsdb5865')
 
 
 import os
